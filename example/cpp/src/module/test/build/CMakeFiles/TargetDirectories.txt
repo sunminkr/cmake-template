@@ -1,0 +1,4 @@
+/home/lsm/cmake-template/example/cpp/src/module/test/build/CMakeFiles/rebuild_cache.dir
+/home/lsm/cmake-template/example/cpp/src/module/test/build/CMakeFiles/edit_cache.dir
+/home/lsm/cmake-template/example/cpp/src/module/test/build/CMakeFiles/test.dir
+/home/lsm/cmake-template/example/cpp/src/module/test/build/CMakeFiles/module_test.dir

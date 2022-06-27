@@ -1,2 +1,2 @@
-FROM ubuntu:test 
-RUN apt-get update
+FROM ubuntu:latest
+RUN apt-get update 
