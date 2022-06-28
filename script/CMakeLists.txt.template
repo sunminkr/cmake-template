@@ -1,2 +1,3 @@
-# mandatory declared commands
+# mandatory
 cmake_minimum_required(VERSION <version>)
+project(<project_name>)
