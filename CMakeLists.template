@@ -1,0 +1,163 @@
+# ----------------
+#  CMakeLists.txt
+# ----------------
+
+# set minimum requirement of cmake
+cmake_minimum_required(VERSION <version>)
+message(STATUS "Building using CMake version : ${CMAKE_VERSION}")
+
+# set project infos
+project(project_name
+        VERSION     version
+        LANGUAGE    language
+)
+
+# Build configuration
+# if no build type specified, default to release builds
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE
+      Release     
+      CACHE STRING "Choose the type of build.")
+endif()
+
+# set directories
+set(abc_INSTALL_BINDIR "bin" CACHE STRING "Directory of executables")
+set(abc_INSTALL_LIBDIR "lib" CACHE STRING "Directory of libraries")
+set(abc_INSTALL_INCLUDEDIR "include" CACHE STRING "Directory of headers")
+
+# set options
+option(abc_BUILD_TESTS "Build tests" OFF)
+set(abc_INSTALL_default ON)
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(abc_INSTALL_default OFF)
+endif()
+
+# C++ version (11) and flags
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+elseif(CMAKE_CXX_STANDARD LESS 11)
+    message(FATAL_ERROR "The standard version of C++ is set lower than 11")
+endif()
+
+# using packages
+find_package(InferTools)
+
+# including directories
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Cannot find BOOST)
+endif()
+
+# set executable
+# The executable includes following sources
+add_executable(executable
+    ${directory}/including_files.cc
+)
+
+# include directories for executable
+target_include_directories(
+    PRIVATE
+    ${directories}
+)
+
+# libraries linked to executable 
+target_link_libraries(thirdparty_include
+    PRIVATE 
+    Boost::filesystem
+)
+
+# implement subdirectories
+add_subdirectory(${SOURCE_DIR} ${BINARY_DIR})
+
+# testing requirements
+#
+# initialise testing area
+enable_testing()
+
+# CMake provides GTest package
+find_package(GTest REQUIRED)
+
+# Should link GTest to test targets
+target_link_libraries(test_executable_name
+                      GTest::GTest
+                      GTest::Main
+)
+
+# generates all test targets
+add_test(test_all test_executable_name)
+
+
+# ---------------
+#  Cmake Modules
+# ---------------
+
+# FindThirdParty.cmake
+# Daniel Pfeifer, Effective CMake, CppNow, 2017.05.19
+
+find_path(thirdparty_INCLUDE_DIR thirdparty.h)
+find_library(thirdparty_LIBRARY thirdparty)
+mark_as_advanced(thirdparty_INCLUDE_DIR thirdparty_LIBRARY)
+
+# For detail https://cmake.org/cmake/help/v3.13/module/FindPackageHandleStandardArgs.html
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(thirdparty
+    REQUIRED_VARS thirdparty_LIBRARY thirdparty_INCLUDE_DIR
+)
+
+if(thirdparty_FOUND AND NOT TARGET thirdparty::module)
+    add_library(thirdparty::module UNKNOWN IMPORTED)
+    set_target_properties(thirdparty::module PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${thirdparty_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${thirdparty_INCLUDE_DIR}"
+    )
+endif()
+
+if(NOT "$ENV{THIRDPARTY_HOME}" STREQUAL "")
+    file(TO_CMAKE_PATH "$ENV{THIRDPARTY_HOME}" THIRDPARTY_HOME)
+endif()
+
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    RESULT_VARIABLE GIT_SUBMOD_RESULT)
+    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+        message(FATAL_ERROR "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+    endif()
+endif()
+
+
+# External Installation Template
+include(ExternalProject)
+ExternalProject_Add{install_name
+        # URL/GIT/SVN ...
+        # URL_HASH "SHA256=${PROJECTNAME_LIBRARYNAME_BUILD_SHA256_CHECKSUM}"
+        CONFIGURE_COMMAND ${LIB_CONFIGURE_COMMAND}
+        BUILD_COMMAND ${LIB_BUILD_COMMAND}
+        INSTALL_COMMAND "" ${OPTIONS}
+)
+# Availables
+ExternalProject_Add(${INSTALL_TARGET_NAME}
+    DEPENDS         ${project}
+    PREFIX          ${PROJECT_PREFIX}
+    # -- Download --
+    URL             ${TARGET_SOURCE_URL}
+    URL_HASH        "SHA256=${project_TARGET_SHA256_CHECKSUM}"
+    # -- Configure --
+    SOURCE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty
+    # -- Build --
+    BINARY_DIR      ${CMAKE_CURRENT_BINARY_DIR}
+    BUILD_COMMAND   ${PROJECT_BUILD_COMMAND}
+    # -- Install --
+    INSTALL_DIR     ${CMAKE_CURRENT_FUNCTION_LIST_DIR}
+    INSTALL_COMMAND "" ${CUSTOM_INSTALL_OPTION}
+    # -- Log --
+    LOG_DOWNLOAD    #0/1
+	LOG_BUILD       #0/1
+    LOG_INSTALL     #0/1
+    # -- Custom Targets --
+    STEP_TARGETS ${PROJECT_PREFIX}_info ${PROJECT_EXAMPLES_STEP} # generates custom targets for these steps
+)
+# Version details on versions.txt located in /thirdparty
+# add_dependencies() on newly installed libraries : highly recommended 

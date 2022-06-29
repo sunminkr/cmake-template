@@ -1,20 +1,19 @@
-#include <filesystem>
 #include <iostream>
+#include <fstream>
 
-bool function() {
-	std::filesystem::path p("../arrow-example/build/test.arrow");
+#include "test.h"
 
-	if(std::boolalpha) {
-		 
+bool testArrow::function() {
+	std::ifstream file("../arrow-example/result/test.arrow");
+	if(file.is_open()) {
+		std::cout << "file exists" << std::endl;
 		return true;
 	}
-	else return false;
-
-	return true;
+	std::cout << "file not found" << std::endl;
+	return false;
 }
 
-
 int main () {
-	function();
+	testArrow::function();
 	return 0;
 }

@@ -3,19 +3,17 @@ This is a CMake template for C++ written projects.
 
 ## Including
 - a basic directory structure
-- an example of unit testing
-- ...
+- an example project
+- a simple unit testing code
+and so on ..
 
 ## Requirement
 - cmake
-- conan
 - a compiler
-: A package installing via ```/script/init.sh```
-
+<!-- conan: will be added for package managing later-->
 
 ## Details
 - Dependencies
 - Building Details
-- Troubleshooting
 - Unit Testing (GTest)
-- Docker
+<!-- Troubleshooting, Docker-->
